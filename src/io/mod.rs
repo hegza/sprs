@@ -29,7 +29,7 @@ impl fmt::Display for IoError {
             IoError::BadMatrixMarketFile =>
                 write!(f, "Bad matrix market file."),
             IoError::UnsupportedMatrixMarketFormat =>
-                write!(f, "Bad matrix market file."),
+                write!(f, "Unsupported matrix market format."),
         }
     }
 }
@@ -90,7 +90,13 @@ pub enum SymmetryMode {
 }
 
 fn parse_header(header: &str) -> Result<(SymmetryMode, DataType), IoError> {
-    if !header.starts_with("%%matrixmarket matrix coordinate") {
+    if !header.starts_with("%%matrixmarket matrix") {
+        return Err(BadMatrixMarketFile);
+    }
+    if header.contains("array") {
+        return Err(UnsupportedMatrixMarketFormat);
+    }
+    if !header.contains("coordinate") {
         return Err(BadMatrixMarketFile);
     }
     let data_type = if header.contains("real") {
